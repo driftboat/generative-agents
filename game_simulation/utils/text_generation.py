@@ -3,7 +3,8 @@ import re
 import os
 from dotenv import load_dotenv
 from transformers import pipeline
-
+from sentence_transformers import SentenceTransformer, util
+import numpy as np
 # Load environment variables from .env file
 load_dotenv()
 
@@ -69,3 +70,20 @@ def summarize_simulation(log_output):
     prompt = f"Summarize the simulation loop:\n\n{log_output}"
     response = generate(prompt)
     return response
+
+def embedding(prompt,use_openai=True):
+    if use_openai:
+        resp = openai.Embedding.create(
+            input=[prompt],
+            engine="text-similarity-davinci-001")
+        return resp['data'][0]['embedding'] 
+    else:
+        model = SentenceTransformer('all-MiniLM-L6-v2') #using a relatively smaller size model from the api
+        return model.encode(prompt, convert_to_tensor=True)
+
+def similar(x, y):
+    """
+    input: Two numpy arrays, x and y
+    output: similarity score range between 0 and 1
+    """ 
+    return util.cos_sim(x,y)
