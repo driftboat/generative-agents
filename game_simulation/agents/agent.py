@@ -211,6 +211,7 @@ class Agent:
             max_attempts = 2
             current_attempt = 0
             while rating is None and current_attempt < max_attempts:
+                res = generate(prompt_meta.format(prompt), self.use_openai)
                 rating = get_rating(res)
                 current_attempt += 1
             if rating is None:
@@ -232,4 +233,20 @@ class Agent:
             return self.location
 
         return self.location
+    
+    def description_importance(self,description, prompt_meta):
+        prompt = "On the scale of 1 to 10, where 1 is purely mundane(e.g., brushing teeth, making bed) and 10 is extremely poignant (e.g., a break up, college acceptance),rate the likely poignancy of the following piece of memory.\n Memory:{} \n ".format(description)
+        res = generate(prompt_meta.format(prompt), self.use_openai)
+        
+        rating = get_rating(res)
+        max_attempts = 2
+        current_attempt = 0
+        while rating is None and current_attempt < max_attempts:
+            res = generate(prompt_meta.format(prompt), self.use_openai)
+            rating = get_rating(res)
+            current_attempt += 1
+        if rating is None:
+            rating = 0
+        return rating
+
 

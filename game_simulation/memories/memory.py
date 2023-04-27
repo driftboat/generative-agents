@@ -15,6 +15,5 @@ class Memory:
         𝑟𝑒𝑙𝑒𝑣𝑎𝑛𝑐𝑒 = similar(self.embedding_vec , query_vec)
         return recency + self.imprtance + relevance
 
-        
 
    

@@ -10,7 +10,7 @@ load_dotenv()
 
 # Get OpenAI API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
+hf_generator = None
 
 
 def generate(prompt, use_openai=True):
@@ -39,7 +39,9 @@ def generate(prompt, use_openai=True):
         return message.strip()
 
     else:
-        hf_generator = pipeline('text-generation', model='EleutherAI/gpt-neo-1.3B', device=0)
+        global hf_generator
+        if hf_generator is None:
+            hf_generator = pipeline(model='declare-lab/flan-alpaca-xl', device=0)
         output = hf_generator(prompt, max_length=len(prompt)+128, do_sample=True)
         out = output[0]['generated_text']
         if '### Response:' in out:
