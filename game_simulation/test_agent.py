@@ -9,6 +9,7 @@ class TestAgent(unittest.TestCase):
         im2 = agent.description_importance("asking your crush out on a date.",prompt_meta)
         print(im1)
         print(im2)
-        self.assertGreater(im2,im1)
+        self.assertGreater(5,im1)
+        self.assertGreater(im2,5)
 
 unittest.main()
