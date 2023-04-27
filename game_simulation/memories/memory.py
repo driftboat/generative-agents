@@ -12,7 +12,7 @@ class Memory:
     def retieval_score(self,retriev_at,query_vec):
         
         recency = pow(0.99,(retriev_at - self.access_at).total_seconds() / 3600)
-        𝑟𝑒𝑙𝑒𝑣𝑎𝑛𝑐𝑒 = similar(self.embedding_vec , query_vec)
+        𝑟𝑒𝑙𝑒𝑣𝑎𝑛𝑐𝑒 = similar(self.embedding_vec , query_vec).item()
         return recency + self.imprtance + relevance
 
 
