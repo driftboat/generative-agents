@@ -27,6 +27,7 @@ We expect that with the advent of the next generation of instruction-tuned model
 * Memory  (recency + importance + relevance)
 * Summary (core characteristics +  daily occupation + recent progress) (WIP)
 * Plan 
+* Reflection
 * Summarize agent decisions as emojis. 
 * Create a family of questions to compress agent contexts better.
 * Check if the agent contexts are compressed well with an another layer of prompts.
