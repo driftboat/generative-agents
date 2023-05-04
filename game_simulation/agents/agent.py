@@ -1,5 +1,7 @@
+import datetime
 import random
-from utils.text_generation import generate, get_rating
+from utils.text_generation import embedding, generate, get_rating
+from memories import memory
 import networkx as nx
 
 class Agent:
@@ -248,5 +250,11 @@ class Agent:
         if rating is None:
             rating = 0
         return rating
+    
+    def add_memory(self, time,description,description_vec):
+        importance = self.description_importance(description,'### Instruction:\n{}\n### Response:')
+        description_vec = embedding(description)
+        mem = memory(description,time,time,importance,description_vec )
+        self.memories.append(mem)
 
 
