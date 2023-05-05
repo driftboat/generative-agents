@@ -257,4 +257,8 @@ class Agent:
         mem = memory(description,time,time,importance,description_vec )
         self.memories.append(mem)
 
-
+    def retrieve_memories(self, query):
+        query_vec = embedding(query)
+        sorted(self.memories, key=lambda x:x.retieval_score(), reverse=True)
+        retrieved = self.memories[:30]
+        return retrieved
