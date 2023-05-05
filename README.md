@@ -25,6 +25,7 @@ We expect that with the advent of the next generation of instruction-tuned model
 ## Future Steps
 
 * Memory  (recency + importance + relevance)
+* Memory Retrieval
 * Summary (core characteristics +  daily occupation + recent progress) (WIP)
 * Plan 
 * Reflection
