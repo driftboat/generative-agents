@@ -1,7 +1,8 @@
 import datetime
 import random
+from memories.memory_type import MemoryType
 from utils.text_generation import embedding, generate, get_rating
-from memories import memory
+from memories.memory import Memory
 import networkx as nx
 
 class Agent:
@@ -13,6 +14,8 @@ class Agent:
     -----------
     name : str
         The name of the agent.
+    age: int
+        The age of the agent.
     description : str
         A brief description of the agent.
     location : str
@@ -23,6 +26,12 @@ class Agent:
         A list of compressed memories that summarize the agent's experiences.
     plans : str
         The agent's daily plans, generated at the beginning of each day.
+    
+    summary : str
+        The agent’s name, age, and traits are concatenated with these three
+summaries as the cached summary.
+
+
 
     Methods:
     --------
@@ -42,9 +51,9 @@ class Agent:
         Rates different locations in the simulated environment based on the agent's preferences and experiences.
     """
      
-    def __init__(self, name, description, starting_location, world_graph, use_openai):
+    def __init__(self, name, age , starting_location, world_graph, use_openai):
         self.name = name
-        self.description = description
+        self.age = age 
         self.location = starting_location
         self.memory_ratings = []
         self.memories = []
@@ -54,7 +63,7 @@ class Agent:
         self.use_openai = use_openai
         
     def __repr__(self):
-        return f"Agent({self.name}, {self.description}, {self.location})"
+        return f"Agent({self.name}, {self.location})"
     
     def plan(self, global_time, prompt_meta):
         """
@@ -251,14 +260,32 @@ class Agent:
             rating = 0
         return rating
     
-    def add_memory(self, time,description,description_vec):
-        importance = self.description_importance(description,'### Instruction:\n{}\n### Response:')
-        description_vec = embedding(description)
-        mem = memory(description,time,time,importance,description_vec )
+    def add_memory(self, time,description,description_vec, prompt_meta):
+        importance = self.description_importance(description,prompt_meta)
+        description_vec = embedding(description,self.use_openai)
+        mem = Memory(MemoryType.OBSERVATION, description, time,time,importance,description_vec )
         self.memories.append(mem)
 
-    def retrieve_memories(self, query):
-        query_vec = embedding(query)
-        sorted(self.memories, key=lambda x:x.retieval_score(), reverse=True)
-        retrieved = self.memories[:30]
+    def retrieve_memories(self, query, MEMORY_LIMIT=20):
+        query_vec = embedding(query,self.use_openai)
+        now = datetime.datetime.now()
+        sorted_memories = sorted(self.memories, key=lambda x:x.retieval_score(now,query_vec), reverse=True)
+        retrieved = sorted_memories[:MEMORY_LIMIT]
         return retrieved
+    
+    def gen_summary_for(self,summary_des, prompt_meta):
+        mems = self.retrieve_memories(f"{self.name}’s {summary_des}")
+        query = f"How would one describe {self.name}’s {summary_des}\ngiven the following statements?"
+        mem_des_arr = [mem.description for mem in mems ]
+        memsstr = "\n-".join(mem_des_arr)
+        query = f"{query}\n-{memsstr}"
+        res = generate(prompt_meta.format(query), self.use_openai)
+        return res
+    
+    def gen_summary(self, prompt_meta):
+        name = f"Name: {self.name} ({self.age})"
+        core_characteristics = self.gen_summary_for("core characteristics", prompt_meta)
+        daily_occupation = self.gen_summary_for("current daily occupation", prompt_meta)
+        recent_progress = self.gen_summary_for("feeling about his recent progress in life", prompt_meta)
+        self.summary = f"{name}\n{core_characteristics}\n{daily_occupation}\n{recent_progress}"
+  
