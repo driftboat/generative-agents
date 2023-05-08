@@ -1,5 +1,7 @@
 from enum import Enum
 class MemoryType(Enum):
     OBSERVATION = "observation"
-    PLAN = "plan"
+    DAILYPLAN = "dailyplan"
+    HOURPLAN = "hourplan"
+    ACTION = "action"
     REFLECTION = "reflection"

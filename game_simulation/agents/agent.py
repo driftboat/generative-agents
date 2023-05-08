@@ -260,10 +260,10 @@ summaries as the cached summary.
             rating = 0
         return rating
     
-    def add_memory(self, time,description,description_vec, prompt_meta):
+    def add_memory(self, time,description, memoryType, prompt_meta):
         importance = self.description_importance(description,prompt_meta)
         description_vec = embedding(description,self.use_openai)
-        mem = Memory(MemoryType.OBSERVATION, description, time,time,importance,description_vec )
+        mem = Memory(memoryType, description, time,time,importance,description_vec )
         self.memories.append(mem)
 
     def retrieve_memories(self, query, MEMORY_LIMIT=20):
@@ -272,6 +272,12 @@ summaries as the cached summary.
         sorted_memories = sorted(self.memories, key=lambda x:x.retieval_score(now,query_vec), reverse=True)
         retrieved = sorted_memories[:MEMORY_LIMIT]
         return retrieved
+    
+    def retrive_pre_daily_plain(self):
+        for mem in reversed(self.memories):
+            if mem.mem_type is MemoryType.DAILYPLAN:
+                return mem
+        return ""
     
     def gen_summary_for(self,summary_des, prompt_meta):
         mems = self.retrieve_memories(f"{self.name}’s {summary_des}")
@@ -288,4 +294,15 @@ summaries as the cached summary.
         daily_occupation = self.gen_summary_for("current daily occupation", prompt_meta)
         recent_progress = self.gen_summary_for("feeling about his recent progress in life", prompt_meta)
         self.summary = f"{name}\n{core_characteristics}\n{daily_occupation}\n{recent_progress}"
+
+    def gen_daily_plan(self, prompt_meta):
+        pre_daily_plan = self.retrive_pre_daily_plain()
+        now = datetime.datetime.now()
+        date = now.strftime("%A %B %d")
+        des = f"Today is {date}. Here is {self.name}’s plan today in broad strokes: 1)"
+        prompt = f"{self.summary}\n{pre_daily_plan}\n{des}"
+        plan =  generate(prompt, self.use_openai)
+        self.add_memory(now,plan,MemoryType.DAILYPLAN,prompt_meta)
+        return plan
+
   
