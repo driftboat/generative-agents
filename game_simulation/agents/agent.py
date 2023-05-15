@@ -273,11 +273,33 @@ summaries as the cached summary.
         retrieved = sorted_memories[:MEMORY_LIMIT]
         return retrieved
     
-    def retrive_pre_daily_plain(self):
+    def retrive_pre_daily_plain(self, now): 
         for mem in reversed(self.memories):
             if mem.mem_type is MemoryType.DAILYPLAN:
-                return mem
+                if((now.date() - mem.date()).days == 1):
+                    return mem
+                if((now.date() - mem.date()).days > 1):
+                    break
         return ""
+    
+    def retrive_cur_daily_plain(self,now):
+        for mem in reversed(self.memories):
+            if mem.mem_type is MemoryType.DAILYPLAN:
+                if((now.date() - mem.date()).days == 0):
+                    return mem
+                if((now.date() - mem.date()).days > 1):
+                    break
+        return ""
+    
+    def retrive_cur_hour_plain(self,now):
+        for mem in reversed(self.memories):
+            if mem.mem_type is MemoryType.HOURPLAN:
+                if((now.date() - mem.date()).hours == 0):
+                    return mem
+                if((now.date() - mem.date()).hours > 0):
+                    break
+        return ""
+
     
     def gen_summary_for(self,summary_des, prompt_meta):
         mems = self.retrieve_memories(f"{self.name}’s {summary_des}")
@@ -295,14 +317,37 @@ summaries as the cached summary.
         recent_progress = self.gen_summary_for("feeling about his recent progress in life", prompt_meta)
         self.summary = f"{name}\n{core_characteristics}\n{daily_occupation}\n{recent_progress}"
 
-    def gen_daily_plan(self, prompt_meta):
-        pre_daily_plan = self.retrive_pre_daily_plain()
-        now = datetime.datetime.now()
+    def gen_daily_plan(self,now, prompt_meta): 
+        pre_daily_plan_mem = self.retrive_pre_daily_plain(now) 
+        pre_date = pre_daily_plan_mem.create_at.strftime("%A %B %d")
+        pre_daily_plan = f"On {pre_date}, {self.name} {pre_daily_plan_mem.description} "
         date = now.strftime("%A %B %d")
         des = f"Today is {date}. Here is {self.name}’s plan today in broad strokes: 1)"
         prompt = f"{self.summary}\n{pre_daily_plan}\n{des}"
         plan =  generate(prompt, self.use_openai)
         self.add_memory(now,plan,MemoryType.DAILYPLAN,prompt_meta)
         return plan
+    
+    def gen_hour_plan(self,now, prompt_meta):
+        daily_plan_mem = self.retrive_cur_daily_plain(now)
+        date = daily_plan_mem.create_at.strftime("%A %B %d")
+        daily_plan = f"On {date}, {self.name} {daily_plan_mem.description} "
+        hour = now.strftime("%-H")
+        des = f"It is currently {hour}:00,What do you do in the next hour? Use at most 10 words to explain."
+        prompt = f"{self.summary}\n{daily_plan}\n{des}"
+        plan =  generate(prompt, self.use_openai)
+        self.add_memory(now,plan,MemoryType.HOURPLAN,prompt_meta)
+        return plan
 
+    def gen_action(self, now, dur, prompt_meta):
+        hour_plan_mem = self.retrive_cur_hour_plain()
+        date = hour_plan_mem.create_at.strftime("%A %B %d %-H:00") 
+        hour_plan = f"On {date}, {self.name} {hour_plan_mem.description} "
+        minutes = now.strftime("%-H:%M")
+        des = f"It is currently {minutes},What do you do in the next {dur} minutes? Use at most 10 words to explain."
+        prompt = f"{self.summary}\n{hour_plan}\n{des}"
+        plan =  generate(prompt, self.use_openai)
+        self.add_memory(now,plan,MemoryType.ACTION,prompt_meta)
+        return plan
+    
   
