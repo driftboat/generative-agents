@@ -262,9 +262,13 @@ summaries as the cached summary.
     
     def add_memory(self, time,description, memoryType, prompt_meta):
         importance = self.description_importance(description,prompt_meta)
+        return self.add_memory_with_importance(time, description, memoryType, importance, prompt_meta)
+
+    def add_memory_with_importance(self,time,description, memoryType,importance, prompt_meta):
         description_vec = embedding(description,self.use_openai)
         mem = Memory(memoryType, description, time,time,importance,description_vec )
         self.memories.append(mem)
+        return mem
 
     def retrieve_memories(self, query, MEMORY_LIMIT=20):
         query_vec = embedding(query,self.use_openai)
@@ -275,30 +279,47 @@ summaries as the cached summary.
     
     def retrive_pre_daily_plain(self, now): 
         for mem in reversed(self.memories):
+            create_date = mem.create_at.date()
+            nowdate = now.date()
             if mem.mem_type is MemoryType.DAILYPLAN:
-                if((now.date() - mem.date()).days == 1):
+                if((nowdate- create_date).days == 1):
                     return mem
-                if((now.date() - mem.date()).days > 1):
+                if((nowdate - create_date).days > 1):
                     break
-        return ""
+        return None
     
     def retrive_cur_daily_plain(self,now):
         for mem in reversed(self.memories):
+            create_date = mem.create_at.date()
+            nowdate = now.date()
             if mem.mem_type is MemoryType.DAILYPLAN:
-                if((now.date() - mem.date()).days == 0):
+                if((nowdate - create_date).days == 0):
                     return mem
-                if((now.date() - mem.date()).days > 1):
+                if((nowdate - create_date).days > 1):
                     break
-        return ""
+        return None
     
     def retrive_cur_hour_plain(self,now):
         for mem in reversed(self.memories):
+            create_date = mem.create_at.date()
+            nowdate = now.date()
             if mem.mem_type is MemoryType.HOURPLAN:
-                if((now.date() - mem.date()).hours == 0):
+                if((nowdate - create_date).hours == 0):
                     return mem
-                if((now.date() - mem.date()).hours > 0):
+                if((nowdate - create_date).hours > 0):
                     break
-        return ""
+        return None
+
+    def retrive_cur_action(self,now):
+        for mem in reversed(self.memories):
+            if mem.mem_type is MemoryType.ACTION:
+                start_time = mem.create_at
+                end_time = create_at + datetime.timedelta(minutes=mem.dur)
+                if now >= start_time and now <= end_time:
+                    return mem 
+                else:
+                    break
+        return None
 
     
     def gen_summary_for(self,summary_des, prompt_meta):
@@ -320,13 +341,16 @@ summaries as the cached summary.
     def gen_daily_plan(self,now, prompt_meta): 
         pre_daily_plan_mem = self.retrive_pre_daily_plain(now) 
         pre_date = pre_daily_plan_mem.create_at.strftime("%A %B %d")
-        pre_daily_plan = f"On {pre_date}, {self.name} {pre_daily_plan_mem.description} "
+        pre_des = ""
+        if pre_daily_plan_mem is not None:
+            pre_des = pre_daily_plan_mem.description
+        pre_daily_plan = f"On {pre_date}, {self.name} {pre_des} "
         date = now.strftime("%A %B %d")
         des = f"Today is {date}. Here is {self.name}’s plan today in broad strokes: 1)"
         prompt = f"{self.summary}\n{pre_daily_plan}\n{des}"
         plan =  generate(prompt, self.use_openai)
-        self.add_memory(now,plan,MemoryType.DAILYPLAN,prompt_meta)
-        return plan
+        mem = self.add_memory(now,plan,MemoryType.DAILYPLAN,prompt_meta)
+        return mem
     
     def gen_hour_plan(self,now, prompt_meta):
         daily_plan_mem = self.retrive_cur_daily_plain(now)
@@ -336,8 +360,8 @@ summaries as the cached summary.
         des = f"It is currently {hour}:00,What do you do in the next hour? Use at most 10 words to explain."
         prompt = f"{self.summary}\n{daily_plan}\n{des}"
         plan =  generate(prompt, self.use_openai)
-        self.add_memory(now,plan,MemoryType.HOURPLAN,prompt_meta)
-        return plan
+        mem = self.add_memory(now,plan,MemoryType.HOURPLAN,prompt_meta)
+        return mem
 
     def gen_action(self, now, dur, prompt_meta):
         hour_plan_mem = self.retrive_cur_hour_plain()
@@ -347,7 +371,8 @@ summaries as the cached summary.
         des = f"It is currently {minutes},What do you do in the next {dur} minutes? Use at most 10 words to explain."
         prompt = f"{self.summary}\n{hour_plan}\n{des}"
         plan =  generate(prompt, self.use_openai)
-        self.add_memory(now,plan,MemoryType.ACTION,prompt_meta)
-        return plan
+        mem = self.add_memory(now,plan,MemoryType.ACTION,prompt_meta)
+        mem.dur = dur
+        return mem
     
   

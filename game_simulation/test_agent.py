@@ -27,10 +27,25 @@ class TestAgent(unittest.TestCase):
         print(im2)
         self.assertGreater(im2,im1) 
 
-    def test_daily_plan(self):
+    def test_plan(self):
         now = datetime.datetime.now()
-        self.agent.gen_daily_plan(now,self.prompt_meta)
-        plan = self.agent.memories[-1]
-        print(plan.description)
+        daily_plan = self.agent.gen_daily_plan(now,self.prompt_meta)
+        self.assertIsNotNone(daily_plan)
+        print("==============daily plan================")
+        print(daily_plan.description)
+        hour_plan = self.agent.gen_hour_plan(now,self.prompt_meta)
+        self.assertIsNotNone(hour_plan)
+        print("==============hour plan================")
+        print(hour_plan.description)
+        action_plan = self.agent.gen_action(now,5,self.prompt_meta)
+        self.assertIsNotNone(action_plan)
+        print("==============action plan================")
+        print(action_plan.description)
+        three_minutes_later = now + datetime.timedelta(minutes=3)        
+        cur_atcion_plan = self.agent.retrive_cur_action(three_minutes_later)
+        self.assertIsNotNone(cur_atcion_plan)
+        print("==============current action================")
+        print(action_plan.description)
+    
 
 unittest.main()
