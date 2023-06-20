@@ -270,12 +270,16 @@ summaries as the cached summary.
         self.memories.append(mem)
         return mem
 
-    def retrieve_memories(self, query, MEMORY_LIMIT=20):
+    def retrieve_memories(self, query, MEMORY_LIMIT=20): 
+        if not query:
+            return self.memories[-MEMORY_LIMIT:]
+
         query_vec = embedding(query,self.use_openai)
         now = datetime.datetime.now()
         sorted_memories = sorted(self.memories, key=lambda x:x.retieval_score(now,query_vec), reverse=True)
         retrieved = sorted_memories[:MEMORY_LIMIT]
         return retrieved
+    
     
     def retrive_pre_daily_plain(self, now): 
         for mem in reversed(self.memories):
@@ -375,4 +379,28 @@ summaries as the cached summary.
         mem.dur = dur
         return mem
     
+    def gen_reflection(self,prompt_meta):
+        mems = self.retrieve_memories(nil,100)
+        query = f"Given only the information above, what are 3 most salient high-level questions we can answer about the subjects in the statements?"
+        mem_des_arr = [mem.description for mem in mems ]
+        memsstr = "\n-".join(mem_des_arr)
+        query = f"{query}\n-{memsstr}"
+        questions = generate(prompt_meta.format(query), self.use_openai)
+        questArr = questions.split('\n')
   
+        for quest in questArr:
+            mems = self.retrieve_memories(quest)
+            mem_des_arr = [f"{i+1}. {mem.description}" for i, mem in enumerate(mems)]
+            memsstr = "\n".join(mem_des_arr)
+            insight = f"What 5 hight-level insight can you infer from the above statements?(example format:insight(because of 1,5,3))"
+            prompt = f"{memsstr}\n{insight}"
+            res = generate(prompt_meta.format(prompt), self.use_openai)
+ 
+            insight = res.split('(')[0]
+            nums = res.split('(')[1].split(')')[0].split(',')
+            nums = [int(num) for num in nums]
+            refmems = [mems[num-1] for num in nums]
+            insight_mem = self.add_memory(datetime.datetime.now(),insight,MemoryType.INSIGHT,prompt_meta)
+            insight_mem.ref_mems = refmems
+            
+        
