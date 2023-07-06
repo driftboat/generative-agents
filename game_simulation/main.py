@@ -3,7 +3,8 @@ import networkx as nx
 from agents.agent import Agent
 from locations.locations import Locations
 from utils.text_generation import summarize_simulation
-
+from  threekingdom.citymgr import CityMgr
+from  threekingdom.powermgr import PowerMgr
 # Set default value for prompt_meta if not defined elsewhere
 prompt_meta = '### Instruction:\n{}\n### Response:'
 
@@ -21,12 +22,16 @@ print_locations = True
 print_actions = True
 print_plans = True
 print_ratings = True
-print_memories = False
+print_memories = False 
 
-use_openai=True
+use_openai=False
 
 # Start simulation loop
 whole_simulation_output = ""
+powerMgr = PowerMgr()
+powerMgr.create_powers()
+cityMgr = CityMgr()
+cityMgr.create_cities(powerMgr)
 
 # Load town areas and people from JSON file
 with open('simulation_config.json', 'r') as f:
