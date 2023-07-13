@@ -2,17 +2,17 @@ import openai
 import re
 import os
 from dotenv import load_dotenv
-from transformers import pipeline
+from transformers import pipeline,AutoTokenizer, AutoModel
 from sentence_transformers import SentenceTransformer, util
-import numpy as np
+import numpy as np 
 # Load environment variables from .env file
 load_dotenv()
 
 # Get OpenAI API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 hf_generator = None
-
-
+model = None
+tokenizer = None
 def generate(prompt, use_openai=True):
     """
     Generates a text completion for a given prompt using either the OpenAI GPT-3 API or the Hugging Face GPT-3 model.
@@ -47,10 +47,16 @@ def generate(prompt, use_openai=True):
         return message.strip()
 
     else:
-        global hf_generator
-        if hf_generator is None:
-            hf_generator = pipeline(model='declare-lab/flan-alpaca-xl', device=0)
-        output = hf_generator(prompt, max_length=len(prompt)+128, do_sample=True)
+        # global hf_generator
+        # if hf_generator is None:
+        #     hf_generator = pipeline(model='declare-lab/flan-alpaca-xl', device=0)
+        # output = hf_generator(prompt, max_length=len(prompt)+128, do_sample=True)
+        global model
+        global tokenizer
+        if model is None:
+            tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm2-6b-int4", trust_remote_code=True)
+            model = AutoModel.from_pretrained("THUDM/chatglm2-6b-int4", trust_remote_code=True).half().cuda()
+        output, history = model.chat(tokenizer, prompt, history=[])
         out = output[0]['generated_text']
         if '### Response:' in out:
             out = out.split('### Response:')[1]

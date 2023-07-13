@@ -26,7 +26,7 @@ print_plans = True
 print_ratings = True
 print_memories = False 
 
-use_openai=True
+use_openai=False
 
 # Start simulation loop
 whole_simulation_output = ""
