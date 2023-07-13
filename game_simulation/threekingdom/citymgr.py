@@ -43,6 +43,7 @@ class CityMgr:
         self.addconnection(chengdu, hanzhong)
         self.addconnection(jianye, jiaozhi)
 
+    def draw(self):
         fromcities = []
         tocities = []
         names = []

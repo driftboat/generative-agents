@@ -51,7 +51,7 @@ summaries as the cached summary.
         Rates different locations in the simulated environment based on the agent's preferences and experiences.
     """
      
-    def __init__(self, name, age , starting_location, world_graph, use_openai):
+    def __init__(self, name, age , starting_location, use_openai):
         self.name = name
         self.age = age 
         self.location = starting_location
@@ -59,7 +59,6 @@ summaries as the cached summary.
         self.memories = []
         self.compressed_memories = []
         self.plans = ""
-        self.world_graph = world_graph
         self.use_openai = use_openai
         
     def __repr__(self):
@@ -236,12 +235,7 @@ summaries as the cached summary.
         if new_location_name == self.location:
             return self.location
 
-        try:
-            path = nx.shortest_path(self.world_graph, source=self.location, target=new_location_name)
-            self.location = new_location_name
-        except nx.NetworkXNoPath:
-            print(f"No path found between {self.location} and {new_location_name}")
-            return self.location
+        self.location = new_location_name
 
         return self.location
     
@@ -344,11 +338,13 @@ summaries as the cached summary.
 
     def gen_daily_plan(self,now, prompt_meta): 
         pre_daily_plan_mem = self.retrive_pre_daily_plain(now) 
-        pre_date = pre_daily_plan_mem.create_at.strftime("%A %B %d")
-        pre_des = ""
-        if pre_daily_plan_mem is not None:
-            pre_des = pre_daily_plan_mem.description
-        pre_daily_plan = f"On {pre_date}, {self.name} {pre_des} "
+        pre_daily_plan = ""
+        if pre_daily_plan_mem != None:
+            pre_date = pre_daily_plan_mem.create_at.strftime("%A %B %d")
+            pre_des = ""
+            if pre_daily_plan_mem is not None:
+                pre_des = pre_daily_plan_mem.description
+            pre_daily_plan = f"On {pre_date}, {self.name} {pre_des} "
         date = now.strftime("%A %B %d")
         des = f"Today is {date}. Here is {self.name}’s plan today in broad strokes: 1)"
         prompt = f"{self.summary}\n{pre_daily_plan}\n{des}"

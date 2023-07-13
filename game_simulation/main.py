@@ -5,6 +5,8 @@ from locations.locations import Locations
 from utils.text_generation import summarize_simulation
 from  threekingdom.citymgr import CityMgr
 from  threekingdom.powermgr import PowerMgr
+from memories.memory_type import MemoryType
+from datetime import datetime, timedelta
 # Set default value for prompt_meta if not defined elsewhere
 prompt_meta = '### Instruction:\n{}\n### Response:'
 
@@ -24,7 +26,7 @@ print_plans = True
 print_ratings = True
 print_memories = False 
 
-use_openai=False
+use_openai=True
 
 # Start simulation loop
 whole_simulation_output = ""
@@ -34,36 +36,25 @@ cityMgr = CityMgr()
 cityMgr.create_cities(powerMgr)
 
 # Load town areas and people from JSON file
-with open('simulation_config.json', 'r') as f:
+with open('simulation_config.json', 'r', encoding='UTF-8') as f:
     town_data = json.load(f)
 
 town_people = town_data['town_people']
-town_areas = town_data['town_areas']
-
-# Create world_graph
-world_graph = nx.Graph()
-last_town_area = None
-for town_area in town_areas.keys():
-    world_graph.add_node(town_area)
-    world_graph.add_edge(town_area, town_area)  # Add an edge to itself
-    if last_town_area is not None:
-        world_graph.add_edge(town_area, last_town_area)
-    last_town_area = town_area
-
-# Add the edge between the first and the last town areas to complete the cycle
-world_graph.add_edge(list(town_areas.keys())[0], last_town_area)
 
 # Initialize agents and locations
 agents = []
 locations = Locations()
 
-
-for name, description in town_people.items():
-    starting_location = description['starting_location']
-    agents.append(Agent(name,40, starting_location, world_graph, use_openai))
-
-for name, description in town_areas.items():
-    locations.add_location(name, description)
+ 
+now = datetime(214, 1, 1)
+for name, people in town_people.items():
+    starting_location = people['starting_location']
+    des_arr = people['description'].split(";")
+    agent = Agent(name,40, starting_location, use_openai)
+    for des in des_arr: 
+        agent.add_memory_with_importance(now,des, MemoryType.OBSERVATION,10,prompt_meta)
+    agent.gen_summary(prompt_meta)
+    agents.append(agent)
 
 for repeat in range(repeats):
     #log_output for one repeat
@@ -71,80 +62,29 @@ for repeat in range(repeats):
 
     print(f"====================== REPEAT {repeat} ======================\n")
     log_output += f"====================== REPEAT {repeat} ======================\n"
-    if log_locations:
-        log_output += f"=== LOCATIONS AT START OF REPEAT {repeat} ===\n"
-        log_output += str(locations) + "\n"
-        if print_locations:
-            print(f"=== LOCATIONS AT START OF REPEAT {repeat} ===")
-            print(str(locations) + "\n")
-    
-    # Plan actions for each agent
     for agent in agents:
-        agent.plan(global_time, prompt_meta)
-        if log_plans:
-            log_output += f"{agent.name} plans: {agent.plans}\n"
-            if print_plans:
-                print(f"{agent.name} plans: {agent.plans}")
-    
-    # Execute planned actions and update memories
-    for agent in agents:
-        # Execute action
-        action = agent.execute_action(agents, locations.get_location(agent.location), global_time, town_areas, prompt_meta)
-        if log_actions:
+        daily_plan = agent.retrive_cur_daily_plain(now)
+        if daily_plan == None:
+            if repeat != 0:
+                agent.gen_reflection(prompt_meta)
+            daily_plan = agent.gen_daily_plan(now,prompt_meta)
+            log_output += f"{agent.name} daily plan: {daily_plan}\n"
+        hour_plan = agent.retrive_cur_daily_plain(now)
+        if hour_plan == None:
+            hour_plane = agent.gen_hour_plan(now, prompt_meta)
+            log_output += f"{agent.name} hour plan: {hour_plan}\n"
+        action = agent.retrive_cur_action(now)
+        if action == None:
+            action = agent.gen_action(now,30)
             log_output += f"{agent.name} action: {action}\n"
-            if print_actions:
-                print(f"{agent.name} action: {action}")
 
-        # Update memories
-        for other_agent in agents:
-            if other_agent != agent:
-                memory = f'[Time: {global_time}. Person: {agent.name}. Memory: {action}]'
-                other_agent.memories.append(memory)
-                if log_memories:
-                    log_output += f"{other_agent.name} remembers: {memory}\n"
-                    if print_memories:
-                        print(f"{other_agent.name} remembers: {memory}")
-
-        # Compress and rate memories for each agent
-        for agent in agents:
-            agent.compress_memories(global_time)
-            agent.rate_memories(locations, global_time, prompt_meta)
-            if log_ratings:
-                log_output += f"{agent.name} memory ratings: {agent.memory_ratings}\n"
-                if print_ratings:
-                    print(f"{agent.name} memory ratings: {agent.memory_ratings}")
-
-    # Rate locations and determine where agents will go next
-    for agent in agents:
-        place_ratings = agent.rate_locations(locations, global_time, prompt_meta)
-        if log_ratings:
-            log_output += f"=== UPDATED LOCATION RATINGS {global_time} FOR {agent.name}===\n"
-            log_output += f"{agent.name} location ratings: {place_ratings}\n"
-            if print_ratings:
-                print(f"=== UPDATED LOCATION RATINGS {global_time} FOR {agent.name}===\n")
-                print(f"{agent.name} location ratings: {place_ratings}\n")
-        
-        old_location = agent.location
-
-        new_location_name = place_ratings[0][0]
-        agent.move(new_location_name)
-
-        if print_locations:
-            log_output += f"=== UPDATED LOCATIONS AT TIME {global_time} FOR {agent.name}===\n"
-            log_output += f"{agent.name} moved from {old_location} to {new_location_name}\n"
-        if print_ratings:
-            print(f"=== UPDATED LOCATIONS AT TIME {global_time} FOR {agent.name}===\n")
-            print(f"{agent.name} moved from {old_location} to {new_location_name}\n")
-
-    print(f"----------------------- SUMMARY FOR REPEAT {repeat} -----------------------")
-
-    print(summarize_simulation(log_output=log_output))
 
     whole_simulation_output += log_output
 
     # Increment time
+    now +=  timedelta(minutes=30)
     global_time += 1
 
 # Write log output to file
-with open('simulation_log.txt', 'w') as f:
+with open('simulation_log.txt', 'w', encoding='UTF-8') as f:
     f.write(whole_simulation_output)
