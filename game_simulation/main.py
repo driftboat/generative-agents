@@ -69,13 +69,13 @@ for repeat in range(repeats):
                 agent.gen_reflection(prompt_meta)
             daily_plan = agent.gen_daily_plan(now,prompt_meta)
             log_output += f"{agent.name} daily plan: {daily_plan}\n"
-        hour_plan = agent.retrive_cur_daily_plain(now)
+        hour_plan = agent.retrive_cur_hour_plain(now)
         if hour_plan == None:
             hour_plane = agent.gen_hour_plan(now, prompt_meta)
             log_output += f"{agent.name} hour plan: {hour_plan}\n"
         action = agent.retrive_cur_action(now)
         if action == None:
-            action = agent.gen_action(now,30)
+            action = agent.gen_action(now,30, prompt_meta)
             log_output += f"{agent.name} action: {action}\n"
 
 

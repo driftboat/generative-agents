@@ -51,18 +51,19 @@ def generate(prompt, use_openai=True):
         # if hf_generator is None:
         #     hf_generator = pipeline(model='declare-lab/flan-alpaca-xl', device=0)
         # output = hf_generator(prompt, max_length=len(prompt)+128, do_sample=True)
+        # out = output[0]['generated_text']
+        # if '### Response:' in out:
+        #     out = out.split('### Response:')[1]
+        # if '### Instruction:' in out:
+        #     out = out.split('### Instruction:')[0]
+        # return out.strip()
         global model
         global tokenizer
         if model is None:
             tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm2-6b-int4", trust_remote_code=True)
             model = AutoModel.from_pretrained("THUDM/chatglm2-6b-int4", trust_remote_code=True).half().cuda()
         output, history = model.chat(tokenizer, prompt, history=[])
-        out = output[0]['generated_text']
-        if '### Response:' in out:
-            out = out.split('### Response:')[1]
-        if '### Instruction:' in out:
-            out = out.split('### Instruction:')[0]
-        return out.strip()
+        return output
 
 
 def get_rating(x):
