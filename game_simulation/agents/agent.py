@@ -240,7 +240,8 @@ summaries as the cached summary.
         return self.location
     
     def description_importance(self,description, prompt_meta):
-        prompt = "On the scale of 1 to 10, where 1 is purely mundane(e.g., brushing teeth, making bed) and 10 is extremely poignant (e.g., a break up, college acceptance),rate the likely poignancy of the following piece of memory.\n Memory:{} \n ".format(description)
+        prompt = "在1到10的尺度上，其中1代表纯粹平凡（例如刷牙，整理床铺），10代表极其深刻（例如分手，大学录取），请对以下记忆片段的可能深刻程度进行评分。\n记忆：{} \n ".format(description)
+
         res = generate(prompt_meta.format(prompt), self.use_openai)
         
         rating = get_rating(res)
@@ -299,30 +300,29 @@ summaries as the cached summary.
     
     def retrive_cur_hour_plain(self,now):
         for mem in reversed(self.memories):
-            create_date = mem.create_at.date()
-            nowdate = now.date()
-            if mem.mem_type is MemoryType.HOURPLAN:
-                if((nowdate - create_date).hours == 0):
-                    return mem
-                if((nowdate - create_date).hours > 0):
-                    break
+            if mem.mem_type is MemoryType.HOURPLAN: 
+                    create_date = mem.create_at.date()
+                    nowdate = now.date()
+                    if create_date == nowdate and mem.create_at.hour == now.hour:
+                        return mem
+                    if create_date < nowdate:
+                        break 
         return None
 
     def retrive_cur_action(self,now):
         for mem in reversed(self.memories):
             if mem.mem_type is MemoryType.ACTION:
                 start_time = mem.create_at
-                end_time = create_at + datetime.timedelta(minutes=mem.dur)
-                if now >= start_time and now <= end_time:
+                end_time = start_time + datetime.timedelta(minutes=mem.dur)
+                if now >= start_time and now < end_time:
                     return mem 
                 else:
                     break
         return None
 
-    
     def gen_summary_for(self,summary_des, prompt_meta):
-        mems = self.retrieve_memories(f"{self.name}’s {summary_des}")
-        query = f"How would one describe {self.name}’s {summary_des}\ngiven the following statements?"
+        mems = self.retrieve_memories(f"{self.name}的{summary_des}")
+        query = f"给出以下陈述，如何简短描述{self.name}的{summary_des}？"
         mem_des_arr = [mem.description for mem in mems ]
         memsstr = "\n-".join(mem_des_arr)
         query = f"{query}\n-{memsstr}"
@@ -330,10 +330,10 @@ summaries as the cached summary.
         return res
     
     def gen_summary(self, prompt_meta):
-        name = f"Name: {self.name} ({self.age})"
-        core_characteristics = self.gen_summary_for("core characteristics", prompt_meta)
-        daily_occupation = self.gen_summary_for("current daily occupation", prompt_meta)
-        recent_progress = self.gen_summary_for("feeling about his recent progress in life", prompt_meta)
+        name = f"姓名：{self.name}（{self.age}岁）"
+        core_characteristics = self.gen_summary_for("核心特征", prompt_meta)
+        daily_occupation = self.gen_summary_for("当前日常职业", prompt_meta)
+        recent_progress = self.gen_summary_for("对生活中最近进展的感受", prompt_meta)
         self.summary = f"{name}\n{core_characteristics}\n{daily_occupation}\n{recent_progress}"
 
     def gen_daily_plan(self,now, prompt_meta): 
@@ -346,7 +346,7 @@ summaries as the cached summary.
                 pre_des = pre_daily_plan_mem.description
             pre_daily_plan = f"On {pre_date}, {self.name} {pre_des} "
         date = now.strftime("%A %B %d")
-        des = f"Today is {date}. Here is {self.name}’s plan today in broad strokes: 1)"
+        des = f"日期 {date}. 这是 {self.name}’s 日计划: 1)"
         prompt = f"{self.summary}\n{pre_daily_plan}\n{des}"
         plan =  generate(prompt, self.use_openai)
         mem = self.add_memory(now,plan,MemoryType.DAILYPLAN,prompt_meta)
@@ -355,20 +355,20 @@ summaries as the cached summary.
     def gen_hour_plan(self,now, prompt_meta):
         daily_plan_mem = self.retrive_cur_daily_plain(now)
         date = daily_plan_mem.create_at.strftime("%A %B %d")
-        daily_plan = f"On {date}, {self.name} {daily_plan_mem.description} "
-        hour = now.strftime("%-H")
-        des = f"It is currently {hour}:00,What do you do in the next hour? Use at most 10 words to explain."
+        daily_plan = f"在 {date}, {self.name} {daily_plan_mem.description} "
+        hour = now.hour
+        des = f"现在是 {hour}:00,下一个小时做什么,最多十个字表述."
         prompt = f"{self.summary}\n{daily_plan}\n{des}"
         plan =  generate(prompt, self.use_openai)
         mem = self.add_memory(now,plan,MemoryType.HOURPLAN,prompt_meta)
         return mem
 
     def gen_action(self, now, dur, prompt_meta):
-        hour_plan_mem = self.retrive_cur_hour_plain()
-        date = hour_plan_mem.create_at.strftime("%A %B %d %-H:00") 
-        hour_plan = f"On {date}, {self.name} {hour_plan_mem.description} "
-        minutes = now.strftime("%-H:%M")
-        des = f"It is currently {minutes},What do you do in the next {dur} minutes? Use at most 10 words to explain."
+        hour_plan_mem = self.retrive_cur_hour_plain(now)
+        date = hour_plan_mem.create_at.strftime("%A %B %d %H:00") 
+        hour_plan = f"在 {date}, {self.name} {hour_plan_mem.description} "
+        minutes = now.strftime("%H:%M")
+        des = f"现在是 {minutes},接下来的 {dur} 分钟做什么? 最多十个字表述."
         prompt = f"{self.summary}\n{hour_plan}\n{des}"
         plan =  generate(prompt, self.use_openai)
         mem = self.add_memory(now,plan,MemoryType.ACTION,prompt_meta)
@@ -377,7 +377,8 @@ summaries as the cached summary.
     
     def gen_reflection(self,prompt_meta):
         mems = self.retrieve_memories(nil,100)
-        query = f"Given only the information above, what are 3 most salient high-level questions we can answer about the subjects in the statements?"
+        query = f"给出以下陈述，对于上述陈述中的主题，我们可以回答哪三个最重要的高级问题？"
+
         mem_des_arr = [mem.description for mem in mems ]
         memsstr = "\n-".join(mem_des_arr)
         query = f"{query}\n-{memsstr}"
@@ -388,7 +389,8 @@ summaries as the cached summary.
             mems = self.retrieve_memories(quest)
             mem_des_arr = [f"{i+1}. {mem.description}" for i, mem in enumerate(mems)]
             memsstr = "\n".join(mem_des_arr)
-            insight = f"What 5 hight-level insight can you infer from the above statements?(example format:insight(because of 1,5,3))"
+            insight = f"从上述陈述中，你能推断出哪五个高级见解？（示例格式：见解（因为1,5,3））"
+
             prompt = f"{memsstr}\n{insight}"
             res = generate(prompt_meta.format(prompt), self.use_openai)
  

@@ -16,118 +16,18 @@
           "description": "魏国主公;任荡不羁 ;足智多谋，善于随机应变;生性多疑",
           "starting_location": "许昌"
         },
-        "司马懿": {
-          "description": "魏国将领;做事果断尤善隐忍;处世圆滑，知人识人;高度统帅力，善于用兵",
-          "starting_location": "许昌"
-        },
-        "张辽": {
-          "description": "魏国将领;有勇有谋;本性忠诚专一，坚守节气忠义;常常身先士卒，英勇善战，坚毅不知疲倦;不争名斗利，严以律己宽以待人",
-          "starting_location": "许昌"
-        },
-        "夏侯渊": {
-          "description": "魏国将领;性格刚烈，十分勇敢",
-          "starting_location": "许昌"
-        },
-        "贾诩": {
-          "description": "魏国谋士;真正的智者;识时务、知进退、善其身之外",
-          "starting_location": "许昌"
-        },
-        "张郃": {
-          "description": "魏国将领;用兵巧变、善列营阵，长于利用地形;性格刚烈",
-          "starting_location": "洛阳"
-        },
-        "徐晃": {
-          "description": "魏国将领;头脑灵活,武艺军阵，治军谋略，猛力方术，样样上手研习",
-          "starting_location": "洛阳"
-        },
-        "李典": {
-          "description": "魏国将领;深明大义，不与人争功，温文儒雅，尊重博学之士，有长者之风",
-          "starting_location": "洛阳"
-        },
-        "于禁": {
-          "description": "魏国将领;坚毅稳重著称，但对待部下严厉",
-          "starting_location": "凉州"
-        },
-        "许褚": {
-          "description": "魏国将领;容貌雄毅，勇力绝人",
-          "starting_location": "凉州"
-        },
-        "夏侯惇": {
-          "description": "魏国将领;儒将;非常勇猛",
-          "starting_location": "北京"
-        },
-        "荀彧": {
-          "description": "魏国谋士;王佐之才;曹操统一北方的首席谋臣和功臣",
-          "starting_location": "北京"
-        },
-
         "刘备": {
           "description": "蜀国君主;关羽是二弟；张飞是三弟;王笼络豪杰，深得人心;识人善用，君臣融洽;坚韧不拔，屡败屡战;宽以待人，心胸广阔",
           "starting_location": "成都"
         },
-        "诸葛亮": {
-          "description": "蜀国谋士;深谋远虑、心胸开阔、谨言慎行、忠心耿耿",
-          "starting_location": "成都"
-        },
-        "黄忠": {
-          "description": "蜀国将领;忠孝仁义，重视情义;箭术高强，有谋有勇;忠义、有智谋，能顾全大局;多次保护刘备，誓死追随",
-          "starting_location": "成都"
-        },
-        "赵云": {
-          "description": "蜀国将领;常忠厚守信、重感情、讲义气;胆识过人，有勇有谋;骁勇善战",
-          "starting_location": "成都"
-        },
-        "关羽": {
-          "description": "蜀国将领;刘备是大哥；张飞是三弟;骁勇善战、忠义无双、诚实守信、骄傲自大、重情重义",
-          "starting_location": "长沙"
-        },
-        "张飞": {
-          "description": "蜀国将领;刘备是大哥；关羽是二哥；脾气暴躁、勇敢、正直、讲义气、莽撞、忠诚、粗鲁中的狡诈、残忍",
-          "starting_location": "长沙"
-        },
-        "关平": {
-          "description": "蜀国将领;遇事沉着冷静;关羽义子",
-          "starting_location": "长沙"
-        },
-        
+         
         "孙权": {
           "description": "吴国君主;脑机智深藏不漏、审时度势、深谋远虑、略有自负",
           "starting_location": "建业"
         },
-        "鲁肃": {
-          "description": "吴国谋士;低调谦虚、老实忠厚、仁义守信、小心谨慎",
-          "starting_location": "建业"
-        },
-        "周瑜": {
-          "description": "吴国将领;慷慨大方，懂得识人，野心勃勃，气量非常大的人",
-          "starting_location": "建业"
-        },
-        "韩当": {
-          "description": "吴国将领;作为将军能够凝聚军心、激励士气共同抵御强敌；作为部下能尊敬主将，严守军中法度",
-          "starting_location": "建业"
-        },
-        "程普": {
-          "description": "蜀国将领;好施与,喜敬士大夫,惟曾与周瑜不睦",
-          "starting_location": "建业"
-        },
-        "吕蒙": {
-          "description": "吴国将领;知错就改，勤奋聪明，善学，豪爽。乐于助人，慈悲为怀，疾恶如仇，孝敬父母，恪守臣遏，以大局为重",
-          "starting_location": "交趾"
-        },
-        "周泰": {
-          "description": "吴国将领;性格忠心耿耿、悍不畏死",
-          "starting_location": "交趾"
-        },
+      
         "张鲁": {
           "description": "张鲁势力君主;性格谨慎、善于用兵",
-          "starting_location": "汉中"
-        },
-        "马超": {
-          "description": "张鲁势力将领;武艺高强，但是自负",
-          "starting_location": "汉中"
-        },
-        "阎圃": {
-          "description": "张鲁势力谋士;勤勉谨慎,大小政事必亲自处理,赏罚严明",
           "starting_location": "汉中"
         }
         

@@ -7,6 +7,8 @@ from  threekingdom.citymgr import CityMgr
 from  threekingdom.powermgr import PowerMgr
 from memories.memory_type import MemoryType
 from datetime import datetime, timedelta
+import locale 
+locale.setlocale(locale.LC_TIME, 'zh_CN')  
 # Set default value for prompt_meta if not defined elsewhere
 prompt_meta = '### Instruction:\n{}\n### Response:'
 
@@ -68,15 +70,15 @@ for repeat in range(repeats):
             if repeat != 0:
                 agent.gen_reflection(prompt_meta)
             daily_plan = agent.gen_daily_plan(now,prompt_meta)
-            log_output += f"{agent.name} daily plan: {daily_plan}\n"
+            log_output += f"{agent.name} daily plan: {daily_plan.description}\n"
         hour_plan = agent.retrive_cur_hour_plain(now)
         if hour_plan == None:
-            hour_plane = agent.gen_hour_plan(now, prompt_meta)
-            log_output += f"{agent.name} hour plan: {hour_plan}\n"
+            hour_plan = agent.gen_hour_plan(now, prompt_meta)
+            log_output += f"{agent.name} hour plan: {hour_plan.description}\n"
         action = agent.retrive_cur_action(now)
         if action == None:
             action = agent.gen_action(now,30, prompt_meta)
-            log_output += f"{agent.name} action: {action}\n"
+            log_output += f"{agent.name} action: {action.description}\n"
 
 
     whole_simulation_output += log_output
